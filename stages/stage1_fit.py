@@ -8,28 +8,31 @@ check the data supports the exercise, and as a fallback.
     python3 stages/stage1_fit.py data/shared_effects --replicate 0
 """
 import os, sys
-import numpy as np, pandas as pd
+import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from simulate.prs import viprs
+from simulate.custom_viprs import custom_viprs
 from models import incremental_r2
 from harness import Dataset
 
 SOURCES = ["EUR", "AFR", "EAS", "SAS", "AMR"]
+H2_BY_SCENARIO = {"shared_effects": 0.3, "ancestry_dependent": 0.3,
+                  "locus_varying": 0.3, "nonlinear_link": 0.2}
 
-
-def fit_sources(d, h2=0.6):
+def fit_sources(d, h2=None):
     """One PRS per ancestry, from that ancestry's summary statistics and LD.
 
     The ten LD blocks are unlinked by construction, so the variational sweep
     runs within each block against that block's 100 x 100 submatrix. Entries
     between blocks in the supplied matrices are sampling noise, not linkage.
     """
+    h2 = H2_BY_SCENARIO[d.scenario] if h2 is None else h2
+
     W = {}
     for pop in SOURCES:
         s = d.sumstats(pop)
-        W[pop] = viprs(s["beta"], d.ld(pop), s["n"],
-                       block_of_snp=s["block_of_snp"], h2=h2)
+        W[pop] = custom_viprs(s["beta"], d.ld(pop), s["n"],
+                              block_of_snp=s["block_of_snp"], h2=h2)
     return W
 
 
