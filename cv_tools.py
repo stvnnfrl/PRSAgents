@@ -15,21 +15,27 @@ from models import incremental_r2
 
 
 class FrozenMoE:
-    def __init__(self, config):
-        self.config=config
-        self.sscale=StandardScaler();self.cscale=StandardScaler()
+    """MoEPRS with the same input handling as the Stage 2 incumbent.
 
-    def fit(self,S,C,y):
-        s=self.sscale.fit_transform(S);c=self.cscale.fit_transform(C)
-        self.model=MoEPRS(**self.config).fit(s,c,y)
+    Scores are re-standardised on the FITTING data only.
+    Covariates (age, sex, PCs) are passed through unchanged, exactly as in Stage 2.
+    """
+
+    def __init__(self, config):
+        self.config = config
+        self.sscale = StandardScaler()
+
+    def fit(self, S, C, y):
+        s = self.sscale.fit_transform(S)
+        self.model = MoEPRS(**self.config).fit(s, C, y)
         return self
 
-    def predict(self,S,C):
-        return self.model.predict(self.sscale.transform(S),self.cscale.transform(C))
+    def predict(self, S, C):
+        return self.model.predict(self.sscale.transform(S), C)
 
-    def genetic(self,S,C):
-        s=self.sscale.transform(S);c=self.cscale.transform(C)
-        return (self.model.mixing(c)*self.model._expert_basis(s)*self.model.gamma).sum(1)
+    def genetic(self, S, C):
+        s = self.sscale.transform(S)
+        return (self.model.mixing(C) * self.model._expert_basis(s) * self.model.gamma).sum(1)
 
 
 class TrainingCVEvaluator:
