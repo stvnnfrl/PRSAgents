@@ -1,8 +1,7 @@
 """Stage 2 summary in one run: (1) file/fit checks, (2) EM convergence, (3) result tables.
 
 Run from the repo root:  python custom_stage2_summary.py
-Writes to outputs/stage2/: checks.csv, baseline_table_r2.csv, baseline_table_mse.csv,
-contrast_tables.csv
+Writes to outputs/stage2/: checks.csv, baseline_table_r2.csv, baseline_table_mse.csv
 """
 import json
 from pathlib import Path
@@ -78,13 +77,19 @@ def result_tables():
         print(f"\n== 3. Table 1, {metric}, n=2000 (mean ± SE) ==\n", t.to_string())
     res = pd.read_csv(OUT / "paired_contrasts.csv")
     res["cell"] = res.mean_gain.map("{:+.4f}".format) + " ± " + res.se.map("{:.4f}".format)
-    res.to_csv(OUT / "contrast_tables.csv", index=False)
+
     for metric in ["r2", "mse"]:
         for n in SIZES:
             t = res[(res.metric == metric) & (res.n_train == n) & (res.scenario != "pooled")] \
                 .pivot(index="scenario", columns="baseline", values="cell")
             print(f"\n== Table 2, MoE - baseline, {metric}, n={n} ==\n", t.to_string())
 
+    t2 = res[res.n_train == 2000]
+    order = [(b, m) for b in ["multiprs", "best_single", "genotype_ridge"] for m in ["r2", "mse"]]
+    wide = t2.pivot(index="scenario", columns=["baseline", "metric"], values="cell")[order]
+    wide = wide.reindex(SCENARIOS + ["pooled"])
+    wide.to_csv(OUT / "paired_differences_moe_vs_baselines_train2000.csv")
+    print("\n== Table 2 (merged), n=2000 ==\n", wide.to_string())
 
 if __name__ == "__main__":
     check_runs()
