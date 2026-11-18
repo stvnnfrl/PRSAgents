@@ -1,0 +1,17 @@
+{
+  "implementation": "provided compact teaching MoEPRS (moeprs.py)",
+  "n_pc": 10,
+  "l2_gate": 0.01,
+  "n_em": 40,
+  "seed": 0,
+  "n_iter": 40,
+  "shared_residual_variance": 0.18140267145552683,
+  "experts": [
+    "EUR_viprs",
+    "AFR_viprs",
+    "EAS_viprs",
+    "SAS_viprs",
+    "AMR_viprs"
+  ],
+  "n_train": 1000
+}
